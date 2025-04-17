@@ -1,0 +1,28 @@
+guild_ids = []
+owner_ids = []
+
+[bot]
+edit_tracker_duration = 20
+prefix = "&"
+
+[cache] # in seconds
+onlinefix_search_ttl = 300
+onlinefix_info_ttl = 300
+onlinefix_torrent_ttl = 300
+weather_ttl = 300
+weather_search_ttl = 300
+
+[timeout] # in seconds
+jankenpon = 3600
+blackjack = 3600
+onlinefix = 900
+owner_response = 600
+
+[economy]
+initial_coins = 200
+
+[blackjack]
+decks = 4
+
+[onlinefix]
+max_search_results = 5
