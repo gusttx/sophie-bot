@@ -1,5 +1,4 @@
-guild_ids = []
-owner_ids = []
+owner_ids = ["793799497561669643"]
 
 [bot]
 edit_tracker_duration = 20

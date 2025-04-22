@@ -1,4 +1,4 @@
-use poise::serenity_prelude::{GuildId, UserId};
+use poise::serenity_prelude::UserId;
 use serde::Deserialize;
 use serde_with::{serde_as, DurationSeconds};
 use std::collections::HashSet;
@@ -17,7 +17,6 @@ pub fn get_config() -> &'static Config {
 
 #[derive(Deserialize)]
 pub struct Config {
-    pub guild_ids: HashSet<GuildId>,
     pub owner_ids: HashSet<UserId>,
     pub bot: BotConfig,
     pub cache: CacheConfig,

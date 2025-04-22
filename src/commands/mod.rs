@@ -10,8 +10,8 @@ mod utils {
     #[cfg(feature = "onlinefix")]
     pub mod onlinefix;
 
-    pub mod ping;
     pub mod calc;
+    pub mod ping;
     pub mod weather;
 
     pub const DEPARTMENT_NAME: &str = "© SophieUtilities";
@@ -24,33 +24,35 @@ mod economy {
 }
 
 mod gamble {
-    pub mod casino;
     pub mod blackjack;
+    pub mod casino;
     pub mod info;
 
     pub const DEPARTMENT_NAME: &str = "© BetSophie";
 }
 
+mod administration {
+    pub mod commands;
+}
 
 pub fn all_commands() -> Vec<poise::Command<crate::types::Data, anyhow::Error>> {
     let commands = vec![
         economy::coins::coins(),
-
         fun::jankenpon::jankenpon(),
         fun::message::message(),
         fun::salve::salve(),
-
         gamble::casino::casino(),
         gamble::blackjack::blackjack(),
         gamble::info::info(),
-
         utils::ping::ping(),
         utils::calc::calc(),
         utils::weather::weather(),
+        administration::commands::commands(),
     ];
 
     #[cfg(feature = "onlinefix")]
-    let commands = commands.into_iter()
+    let commands = commands
+        .into_iter()
         .chain(std::iter::once(utils::onlinefix::onlinefix()))
         .collect();
 

@@ -159,4 +159,13 @@ impl Reply {
         msg.edit(ctx, self.into()).await?;
         Ok(())
     }
+
+    pub async fn edit_followup(
+        self,
+        ctx: &Context<'_>,
+        interaction: &ComponentInteraction,
+        msg: &Message,
+    ) -> SerenityResult<Message> {
+        interaction.edit_followup(ctx, msg.id, self.into()).await
+    }
 }
