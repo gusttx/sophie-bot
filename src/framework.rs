@@ -6,6 +6,7 @@ use crate::{
     utils::discord::reply::Reply,
 };
 use anyhow::Error;
+use futures::future::join_all;
 use log::{error, info, warn};
 use poise::{
     serenity_prelude::{self, ActivityData, FullEvent, Interaction},
@@ -98,7 +99,7 @@ async fn on_error(error: FrameworkError<'_, Data, Error>) -> () {
             error!("Command error: {}", error);
 
             if let Some(mut data) = ctx.invocation_data::<InvocationData>().await {
-                if handle_with_invocation_data(&ctx, data.deref_mut()).await {
+                if handle_with_invocation_data(ctx, data.deref_mut()).await {
                     return;
                 }
             }
@@ -133,7 +134,7 @@ async fn on_error(error: FrameworkError<'_, Data, Error>) -> () {
             error!("Panic: {}", error);
 
             if let Some(mut data) = ctx.invocation_data::<InvocationData>().await {
-                handle_with_invocation_data(&ctx, data.deref_mut()).await;
+                handle_with_invocation_data(ctx, data.deref_mut()).await;
                 return;
             }
 
@@ -151,14 +152,17 @@ async fn on_error(error: FrameworkError<'_, Data, Error>) -> () {
     }
 }
 
-async fn handle_with_invocation_data<'a>(ctx: &Context<'_>, data: &'a mut InvocationData) -> bool {
+async fn handle_with_invocation_data(ctx: Context<'_>, data: &mut InvocationData) -> bool {
     if !data.coins_to_refound.is_empty() {
         let db = &ctx.data().database;
         warn!("Trying to restore coins...");
 
-        for &(user_id, coins) in &data.coins_to_refound {
-            _ = User::add_coins(db, user_id, coins).await;
-        }
+        let futures = data
+            .coins_to_refound
+            .iter()
+            .map(|&(user_id, coins)| async move { User::add_coins(db, user_id, coins) });
+
+        join_all(futures).await;
     }
 
     if let Some(msg) = data.message_to_edit.as_mut() {
