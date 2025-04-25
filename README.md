@@ -56,7 +56,7 @@ Para utilizá-lo, a feature `onlinefix` deve ser explicitamente ativada durante 
 
 5.  **Configure o bot**
     
-    Você pode configurar o bot em `config.toml`. Atualmente, ele só registra comandos nos servidores listados no campo `guild_ids`.
+    Você pode configurar o bot em `config.toml`.
 
 6.  **Execute o bot:**
     ```bash
