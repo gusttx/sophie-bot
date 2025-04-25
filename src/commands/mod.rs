@@ -65,7 +65,9 @@ pub fn commands() -> Vec<Command> {
 }
 
 pub fn context_menu_commands() -> Vec<Command> {
-    vec![]
+    vec![
+        utils::user::avatar_context()
+    ]
 }
 
 pub fn all_commands() -> Vec<Command> {

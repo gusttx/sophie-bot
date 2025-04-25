@@ -75,7 +75,6 @@ impl ButtonsRow {
         self.insert_button(ButtonStyle::Danger, button)
     }
 
-    #[allow(dead_code)]
     pub fn add_link(mut self, url: impl Into<String>, label: impl Into<String>) -> Self {
         let create_button = CreateButton::new_link(url)
             .label(label);
