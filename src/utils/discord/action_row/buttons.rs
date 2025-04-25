@@ -58,9 +58,10 @@ impl ButtonsRow {
         self
     }
 
-    // pub fn add_blurple(self, button: Button) -> Self {
-    //     self.insert_button(ButtonStyle::Primary, button)
-    // }
+    #[allow(dead_code)]
+    pub fn add_blurple(self, button: Button) -> Self {
+        self.insert_button(ButtonStyle::Primary, button)
+    }
 
     pub fn add_green(self, button: Button) -> Self {
         self.insert_button(ButtonStyle::Success, button)
@@ -72,5 +73,14 @@ impl ButtonsRow {
 
     pub fn add_red(self, button: Button) -> Self {
         self.insert_button(ButtonStyle::Danger, button)
+    }
+
+    #[allow(dead_code)]
+    pub fn add_link(mut self, url: impl Into<String>, label: impl Into<String>) -> Self {
+        let create_button = CreateButton::new_link(url)
+            .label(label);
+
+        self.buttons.push(create_button);
+        self
     }
 }
