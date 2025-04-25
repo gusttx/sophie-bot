@@ -9,9 +9,9 @@ use crate::{
 use poise::{
     self, command,
     samples::{register_globally, register_in_guild},
-    serenity_prelude::{Command, ComponentInteractionCollector},
+    serenity_prelude::{Command, CommandType, ComponentInteractionCollector},
 };
-use std::{collections::HashMap, time::Instant};
+use std::{collections::{HashMap, HashSet}, time::Instant};
 
 const DEPARTMENT_NAME: &str = "© SophieCommands";
 
@@ -91,7 +91,7 @@ fn create_commands_reply<U, E>(
 ) -> Reply {
     let commands = commands
         .iter()
-        .filter(|c| c.slash_action.is_some())
+        .filter(|c| c.slash_action.is_some() || c.context_menu_action.is_some())
         .collect::<Vec<_>>();
 
     let server_buttons = ButtonsRow::new()
@@ -102,37 +102,58 @@ fn create_commands_reply<U, E>(
         .add_red(Button::new("del-all", "Remover todos globalmente"));
 
     let mut commands_map: HashMap<&String, [bool; 3]> = HashMap::with_capacity(commands.len());
+    let mut context_menu_map: HashSet<&String> = HashSet::new();
 
     for command in &commands {
-        commands_map.entry(&command.name).or_default()[0] = true;
+        let name = command.context_menu_name.as_ref().unwrap_or(&command.name);
+        if command.context_menu_action.is_some() {
+            context_menu_map.insert(name);
+        }
+        commands_map.entry(name).or_default()[0] = true;
     }
     for command in guild_commands {
+        if let CommandType::User | CommandType::Message = command.kind {
+            context_menu_map.insert(&command.name);
+        }
         commands_map.entry(&command.name).or_default()[1] = true;
     }
     for command in global_commands {
+        if let CommandType::User | CommandType::Message = command.kind {
+            context_menu_map.insert(&command.name);
+        }
         commands_map.entry(&command.name).or_default()[2] = true;
     }
 
-    let desc_vec = commands_map
-        .iter()
-        .map(|(name, map)| {
-            let icons = match map {
-                [true, false, false] => "\\💾",
-                [_, true, false] => "\\🏡",
-                [_, false, true] => "\\🌎",
-                [_, true, true] => "\\🏡\\🌎",
-                _ => unreachable!("Invalid command map"),
-            };
+    let mut slash_commands = Vec::new();
+    let mut context_menu_commands = Vec::new();
 
-            match map[0] {
-                true => format!("- [{icons}] {name}"),
-                false => format!("- [{icons}] ~~{name}~~"),
-            }
-        })
-        .collect::<Vec<_>>();
+    for (&name, map) in &commands_map {
+        let icons = match map {
+            [true, false, false] => "\\💾",
+            [_, true, false] => "\\🏡",
+            [_, false, true] => "\\🌎",
+            [_, true, true] => "\\🏡\\🌎",
+            _ => unreachable!("Invalid command map"),
+        };
 
-    let embed = Embed::new(0x36FF00, ":wrench: Comandos Slash")
-        .desc(desc_vec.join("\n"))
+        let title = match map[0] {
+            true => format!("- __[{icons}] {name}__"),
+            false => format!("- __[{icons}] ~~{name}~~__"),
+        };
+
+        if context_menu_map.contains(name) {
+            context_menu_commands.push(title);
+        } else {
+            slash_commands.push(title);
+        }
+    }
+
+    let embed = Embed::new(0x36FF00, ":wrench: Comandos")
+        .desc(format!(
+            "{}\n\n:dividers: **Context Menu:**\n{}",
+            slash_commands.join("\n"),
+            context_menu_commands.join("\n"),
+        ))
         .inline_field("\\💾 Existentes", format!("{} comandos", commands.len()))
         .inline_field(
             "\\🏡 No servidor",
