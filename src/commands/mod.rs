@@ -35,7 +35,9 @@ mod administration {
     pub mod commands;
 }
 
-pub fn all_commands() -> Vec<poise::Command<crate::types::Data, anyhow::Error>> {
+type Command = poise::Command<crate::types::Data, anyhow::Error>;
+
+pub fn commands() -> Vec<poise::Command<crate::types::Data, anyhow::Error>> {
     let commands = vec![
         economy::coins::coins(),
         fun::jankenpon::jankenpon(),
@@ -56,5 +58,15 @@ pub fn all_commands() -> Vec<poise::Command<crate::types::Data, anyhow::Error>> 
         .chain(std::iter::once(utils::onlinefix::onlinefix()))
         .collect();
 
+    commands
+}
+
+pub fn context_menu_commands() -> Vec<Command> {
+    vec![]
+}
+
+pub fn all_commands() -> Vec<Command> {
+    let mut commands = commands();
+    commands.extend(context_menu_commands());
     commands
 }
