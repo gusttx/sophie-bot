@@ -14,6 +14,8 @@ mod utils {
     pub mod ping;
     pub mod weather;
 
+    pub mod user;
+
     pub const DEPARTMENT_NAME: &str = "© SophieUtilities";
 }
 
@@ -37,7 +39,7 @@ mod administration {
 
 type Command = poise::Command<crate::types::Data, anyhow::Error>;
 
-pub fn commands() -> Vec<poise::Command<crate::types::Data, anyhow::Error>> {
+pub fn commands() -> Vec<Command> {
     let commands = vec![
         economy::coins::coins(),
         fun::jankenpon::jankenpon(),
@@ -49,6 +51,7 @@ pub fn commands() -> Vec<poise::Command<crate::types::Data, anyhow::Error>> {
         utils::ping::ping(),
         utils::calc::calc(),
         utils::weather::weather(),
+        utils::user::user(),
         administration::commands::commands(),
     ];
 
