@@ -6,12 +6,16 @@ use crate::{
         reply::Reply,
     },
 };
+use futures::StreamExt;
 use poise::{
     self, command,
     samples::{register_globally, register_in_guild},
     serenity_prelude::{Command, CommandType, ComponentInteractionCollector},
 };
-use std::{collections::{HashMap, HashSet}, time::Instant};
+use std::{
+    collections::{HashMap, HashSet},
+    time::Instant,
+};
 
 const DEPARTMENT_NAME: &str = "© SophieCommands";
 
@@ -33,12 +37,13 @@ pub async fn commands(ctx: Context<'_>) -> UnitResult {
 
     InvocationData::edit_message(&ctx, message.clone()).await;
 
-    while let Some(interaction) = ComponentInteractionCollector::new(&ctx)
+    let mut collector = ComponentInteractionCollector::new(&ctx)
         .author_id(ctx.author().id)
         .message_id(message.id)
         .timeout(ctx.data().config.timeout.owner_response)
-        .await
-    {
+        .stream();
+
+    while let Some(interaction) = collector.next().await {
         let msg = Reply::ephemeral("<a:loading:1364061243282952212>")
             .followup(&ctx, &interaction)
             .await?;

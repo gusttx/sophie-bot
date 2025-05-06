@@ -3,20 +3,15 @@ use crate::types::{BlackjackGame, BlackjackResult, Context, InvocationData, Unit
 use crate::utils::discord::action_row::{Button, ButtonsRow};
 use crate::utils::discord::embed::Embed;
 use crate::utils::discord::reply::Reply;
+use futures::StreamExt;
 use poise::serenity_prelude::ComponentInteractionCollector;
-use poise::{
-    command,
-    serenity_prelude::User as SerenityUser
-};
+use poise::{command, serenity_prelude::User as SerenityUser};
 
 use super::DEPARTMENT_NAME;
 const EMBED_COLOR: u32 = 0xFF3344;
 
 /// Jogue uma partida de Blackjack (21) com o bot
-#[command(
-    slash_command,
-    user_cooldown = 10
-)]
+#[command(slash_command, user_cooldown = 10)]
 pub async fn blackjack(
     ctx: Context<'_>,
     #[description = "Sua aposta"]
@@ -42,9 +37,7 @@ pub async fn blackjack(
         db_user.coins += bet;
         db_user.update(&db).await?;
 
-        return Reply::with_embed(embed)
-            .send_ok(&ctx)
-            .await;
+        return Reply::with_embed(embed).send_ok(&ctx).await;
     }
 
     db_user.coins -= bet;
@@ -65,11 +58,12 @@ pub async fn blackjack(
 
     InvocationData::edit_message(&ctx, message.clone()).await;
 
-    while let Some(interaction) = ComponentInteractionCollector::new(ctx)
+    let mut collector = ComponentInteractionCollector::new(ctx)
         .message_id(message.id)
         .timeout(config.timeout.blackjack)
-        .await
-    {
+        .stream();
+
+    while let Some(interaction) = collector.next().await {
         if interaction.user.id != author.id {
             Reply::ephemeral(":rage: Esse jogo não é teu piá")
                 .followup(&ctx, &interaction)
@@ -87,12 +81,10 @@ pub async fn blackjack(
         }
 
         let embed = create_result_embed(&game, author, bet, false);
-        Reply::with_embed(embed)
-            .edit(&ctx, &mut message)
-            .await?;
+        Reply::with_embed(embed).edit(&ctx, &mut message).await?;
     }
 
-    if game.is_finished() {        
+    if game.is_finished() {
         match game.result {
             BlackjackResult::Win => {
                 db_user.coins += bet * 2;
@@ -115,7 +107,12 @@ pub async fn blackjack(
         .await
 }
 
-fn create_result_embed(game: &BlackjackGame, author: &SerenityUser, bet: u32, timeout: bool) -> Embed {
+fn create_result_embed(
+    game: &BlackjackGame,
+    author: &SerenityUser,
+    bet: u32,
+    timeout: bool,
+) -> Embed {
     let players_field = game.player_hand.get_field();
     let dealers_field = game.dealer_hand.get_field();
 

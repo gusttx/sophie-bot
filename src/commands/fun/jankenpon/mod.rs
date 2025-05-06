@@ -1,29 +1,25 @@
 mod utils;
+use futures::StreamExt;
 use utils::*;
 
-use anyhow::bail;
+pub use super::DEPARTMENT_NAME;
 use crate::{
     database::User,
     types::{Context, InvocationData, JankenponChoice, JankenponResult, UnitResult},
     utils::discord::reply::Reply,
 };
+use anyhow::bail;
 use poise::{
     command,
     serenity_prelude::{ComponentInteractionCollector, User as SerenityUser},
 };
-pub use super::DEPARTMENT_NAME;
 
 /// Desafie um jogador ou bot para um duelo de Jankenpon
-#[command(
-    slash_command,
-    user_cooldown = 10
-)]
+#[command(slash_command, user_cooldown = 10)]
 pub async fn jankenpon(
     ctx: Context<'_>,
-    #[description = "Seu oponente"]
-    opponent: SerenityUser,
-    #[description = "Sua escolha"]
-    choice: JankenponChoice,
+    #[description = "Seu oponente"] opponent: SerenityUser,
+    #[description = "Sua escolha"] choice: JankenponChoice,
     #[description = "Aposta"]
     #[min = 1]
     #[max = 100_000]
@@ -51,7 +47,7 @@ pub async fn jankenpon(
         Ok(user) => {
             InvocationData::refound(&ctx, author.id, bet.unwrap()).await;
             Some(user)
-        },
+        }
         Err(PrepareError::NoBet) => None,
         Err(PrepareError::NotEnoughCoins) => {
             return Reply::ephemeral(":pensive: Você não tem moedas suficientes")
@@ -69,11 +65,12 @@ pub async fn jankenpon(
 
     InvocationData::edit_message(&ctx, message.clone()).await;
 
-    while let Some(interaction) = ComponentInteractionCollector::new(ctx)
+    let mut collector = ComponentInteractionCollector::new(ctx)
         .message_id(message.id)
         .timeout(config.timeout.jankenpon)
-        .await
-    {
+        .stream();
+
+    while let Some(interaction) = collector.next().await {
         if interaction.user.id == author.id {
             Reply::ephemeral(":raised_hand::raised_back_of_hand: Calma calabreso")
                 .followup(&ctx, &interaction)
@@ -93,7 +90,7 @@ pub async fn jankenpon(
             Ok(user) => {
                 InvocationData::refound(&ctx, opponent.id, bet.unwrap()).await;
                 Some(user)
-            },
+            }
             Err(PrepareError::NoBet) => None,
             Err(PrepareError::NotEnoughCoins) => {
                 Reply::ephemeral(":pensive: Você não tem moedas suficientes")
@@ -112,7 +109,7 @@ pub async fn jankenpon(
                 JankenponResult::Tie => {
                     user.coins += prize / 2;
                     opponent_user.coins += prize / 2;
-                },
+                }
             }
 
             User::transaction_update(db, vec![user, opponent_user]).await?;

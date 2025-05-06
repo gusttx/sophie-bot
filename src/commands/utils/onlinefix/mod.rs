@@ -1,4 +1,5 @@
 mod utils;
+use futures::StreamExt;
 use utils::*;
 
 use crate::{
@@ -55,11 +56,12 @@ pub async fn onlinefix(
 
     let mut selected_game: Option<(OnlineFixGameInfo, &OnlineFixGame)> = None;
 
-    while let Some(interaction) = ComponentInteractionCollector::new(ctx)
+    let mut collector = ComponentInteractionCollector::new(ctx)
         .message_id(message.id)
         .timeout(timeout)
-        .await
-    {
+        .stream();
+
+    while let Some(interaction) = collector.next().await {
         match interaction.data.kind {
             ComponentInteractionDataKind::StringSelect { ref values } => {
                 let game_path = values.first().unwrap();
