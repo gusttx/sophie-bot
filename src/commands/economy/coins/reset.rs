@@ -20,13 +20,16 @@ pub async fn reset(ctx: Context<'_>, user: SerenityUser) -> UnitResult {
         return Ok(());
     };
 
-    ReactionCollector::new(ctx)
+    let reaction = ReactionCollector::new(ctx)
         .author_id(ctx.author().id)
         .message_id(message.id)
         .filter(|reaction| reaction.emoji == ReactionType::Unicode('👊'.to_string()))
         .timeout(ctx.data().config.timeout.owner_response)
         .await;
 
-    _ = message.delete(&ctx).await;
+    if reaction.is_some() {
+        _ = message.delete(&ctx).await;
+    }
+
     Ok(())
 }
