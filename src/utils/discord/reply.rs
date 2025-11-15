@@ -1,19 +1,22 @@
 use super::embed::Embed;
-use crate::types::{Context, UnitResult};
+use crate::{types::{Context, UnitResult}, utils::discord::action_row::ActionRow};
 use poise::{
     serenity_prelude::{
-        ComponentInteraction, CreateActionRow, CreateInteractionResponseFollowup, EditMessage,
-        Message, Result as SerenityResult,
+        ComponentInteraction, CreateActionRow, CreateInteractionResponseFollowup, EditMessage, Message, Result as SerenityResult
     },
     CreateReply, ReplyHandle,
 };
 
-#[derive(Default)]
+pub struct ComponentsList {
+
+}
+
+#[derive(Default, Clone)]
 pub struct Reply {
     ephemeral: bool,
     content: Option<String>,
     embeds: Option<Vec<Embed>>,
-    components: Option<Vec<CreateActionRow>>,
+    components: Option<Vec<ActionRow>>,
 }
 
 impl Into<CreateInteractionResponseFollowup> for Reply {
@@ -26,10 +29,10 @@ impl Into<CreateInteractionResponseFollowup> for Reply {
             followup = followup.content(content);
         }
         if let Some(components) = self.components {
-            followup = followup.components(components);
+            followup = followup.components(components.into_iter().map(Into::into).collect());
         }
         if let Some(embeds) = self.embeds {
-            followup = followup.embeds(embeds.into_iter().map(|e| e.into()).collect());
+            followup = followup.embeds(embeds.into_iter().map(Into::into).collect());
         }
 
         followup
@@ -46,7 +49,7 @@ impl Into<CreateReply> for Reply {
             reply = reply.content(content);
         }
         if let Some(components) = self.components {
-            reply = reply.components(components);
+            reply = reply.components(components.into_iter().map(Into::into).collect());
         }
 
         // reply doesn't support .embeds() yet
@@ -67,10 +70,10 @@ impl Into<EditMessage> for Reply {
             edit = edit.content(content);
         }
         if let Some(components) = self.components {
-            edit = edit.components(components);
+            edit = edit.components(components.into_iter().map(Into::into).collect());
         }
         if let Some(embeds) = self.embeds {
-            edit = edit.embeds(embeds.into_iter().map(|e| e.into()).collect());
+            edit = edit.embeds(embeds.into_iter().map(Into::into).collect());
         }
 
         edit
@@ -119,7 +122,7 @@ impl Reply {
         self
     }
 
-    pub fn add_action_row(mut self, row: CreateActionRow) -> Self {
+    pub fn add_action_row(mut self, row: ActionRow) -> Self {
         self.components
             .get_or_insert_with(|| Vec::with_capacity(5))
             .push(row);
@@ -128,6 +131,33 @@ impl Reply {
 
     pub fn empty_action_rows(mut self) -> Self {
         self.components = Some(Vec::new());
+        self
+    }
+
+    pub fn clean_action_rows(mut self) -> Self {
+        if let Some(components) = self.components.take() {
+            let cleaned = components
+                .into_iter()
+                .filter_map(|row| match row {
+                    ActionRow::Buttons(buttons_row) => {
+                        let buttons_row = buttons_row.retain_links();
+                        if buttons_row.is_empty() {
+                            None
+                        } else {
+                            Some(ActionRow::Buttons(buttons_row.retain_links()))
+                        }
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+
+            self.components = if cleaned.is_empty() {
+                None
+            } else {
+                Some(cleaned)
+            };
+        }
+
         self
     }
 

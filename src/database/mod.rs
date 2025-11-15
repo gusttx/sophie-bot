@@ -35,7 +35,7 @@ impl Database<Uninitialized> {
 }
 
 impl Database<Initialized> {
-    pub async fn get_tx(&self) -> Result<Transaction<MySql>> {
+    pub async fn get_tx(&self) -> Result<Transaction<'_, MySql>> {
         self.pool.begin().await
     }
 }

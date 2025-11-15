@@ -16,6 +16,8 @@ pub async fn set(ctx: Context<'_>, user: SerenityUser, qnt: u32) -> UnitResult {
     }
 
     User::set_coins(&data.database, user.id, qnt).await?;
+    _ = ctx.react('👊').await;
+    
     let Some(message) = ctx.msg() else {
         return Ok(());
     };

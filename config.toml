@@ -14,7 +14,7 @@ weather_search_ttl = 300
 [timeout] # in seconds
 jankenpon = 3600
 blackjack = 3600
-onlinefix = 900
+onlinefix = 3600
 owner_response = 600
 
 [economy]

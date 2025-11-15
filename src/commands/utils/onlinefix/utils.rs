@@ -37,7 +37,9 @@ pub fn create_search_reply(search: &OnlineFixSearch) -> Reply {
         .fields(fields)
         .footer(DEPARTMENT_NAME);
 
-    Reply::with_embed(embed).add_action_row(select_menu.into())
+    Reply::with_embed(embed)
+        .content("")
+        .add_action_row(select_menu.into())
 }
 
 pub fn create_info_reply(game_info: &OnlineFixGameInfo, game: &OnlineFixGame) -> Reply {
@@ -65,7 +67,8 @@ pub fn create_torrent_reply(
     game: &OnlineFixGame,
     torrent: &OnlineFixTorrent,
 ) -> Reply {
-    let buttons = ButtonsRow::new().add_grey(Button::new("goback-2", "Voltar"));
+    let buttons = ButtonsRow::new().add_grey(Button::new("goback-2", "Voltar"))
+        .add_link(format!("https://r.gustta.dev/{}", torrent.magnet), "Magnet");
 
     let size = torrent.files.iter().map(|file| file.length).sum();
 

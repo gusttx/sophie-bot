@@ -16,6 +16,8 @@ pub async fn reset(ctx: Context<'_>, user: SerenityUser) -> UnitResult {
     }
 
     User::set_coins(&data.database, user.id, data.config.economy.initial_coins).await?;
+    _ = ctx.react('👊').await;
+
     let Some(message) = ctx.msg() else {
         return Ok(());
     };

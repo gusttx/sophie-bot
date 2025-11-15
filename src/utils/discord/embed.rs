@@ -1,7 +1,9 @@
 use poise::serenity_prelude::{CreateEmbed, CreateEmbedFooter};
 
+#[derive(Clone)]
 pub struct EmbedField(String, String, bool);
 
+#[derive(Clone)]
 pub struct Embed {
     color: u32,
     title: String,

@@ -12,7 +12,7 @@ use poise::{
 };
 
 /// Get online-fix games
-#[command(slash_command, user_cooldown = 60)]
+#[command(slash_command, user_cooldown = 15)]
 pub async fn onlinefix(
     ctx: Context<'_>,
     #[description = "Game to search"]
@@ -49,8 +49,9 @@ pub async fn onlinefix(
         }
     };
 
-    create_search_reply(&search)
-        .content("")
+    let mut reply = create_search_reply(&search);
+    reply
+        .clone()
         .edit(&ctx, &mut message)
         .await?;
 
@@ -76,9 +77,11 @@ pub async fn onlinefix(
                         continue;
                     }
                 };
-
+ 
                 if let Some(game) = search.games.iter().find(|game| game.url == game_info.url) {
-                    create_info_reply(&game_info, game)
+                    reply = create_info_reply(&game_info, game);
+                    reply
+                        .clone()
                         .edit(&ctx, &mut message)
                         .await?;
 
@@ -90,10 +93,12 @@ pub async fn onlinefix(
                 let action = &interaction.data.custom_id;
 
                 if action == "goback-1" {
-                    create_search_reply(&search)
+                    reply = create_search_reply(&search);
+                    reply
+                        .clone()
                         .edit(&ctx, &mut message)
                         .await?;
-                    continue;
+                    continue; 
                 }
 
                 let Some(current_game) = &selected_game else {
@@ -101,7 +106,9 @@ pub async fn onlinefix(
                 };
 
                 if action == "goback-2" {
-                    create_info_reply(&current_game.0, current_game.1)
+                    reply = create_info_reply(&current_game.0, current_game.1);
+                    reply
+                        .clone()
                         .edit(&ctx, &mut message)
                         .await?;
                     continue;
@@ -118,7 +125,9 @@ pub async fn onlinefix(
                     }
                 };
 
-                create_torrent_reply(&current_game.0, current_game.1, &torrent)
+                reply = create_torrent_reply(&current_game.0, current_game.1, &torrent);
+                reply
+                    .clone()
                     .edit(&ctx, &mut message)
                     .await?;
             }
@@ -127,8 +136,8 @@ pub async fn onlinefix(
         };
     }
 
-    Reply::default()
-        .empty_action_rows()
+    reply
+        .clean_action_rows()
         .edit_ok(&ctx, &mut message)
         .await
 }

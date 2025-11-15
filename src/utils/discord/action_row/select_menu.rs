@@ -2,6 +2,9 @@ use poise::serenity_prelude::{
     CreateActionRow, CreateSelectMenu, CreateSelectMenuKind, CreateSelectMenuOption,
 };
 
+use crate::utils::discord::action_row::ActionRow;
+
+#[derive(Clone)]
 pub struct StringSelectMenu {
     pub custom_id: String,
     pub options: Vec<(String, String)>,
@@ -20,17 +23,8 @@ impl StringSelectMenu {
     }
 }
 
-impl Into<CreateActionRow> for StringSelectMenu {
-    fn into(self) -> CreateActionRow {
-        CreateActionRow::SelectMenu(CreateSelectMenu::new(
-            self.custom_id,
-            CreateSelectMenuKind::String {
-                options: self
-                    .options
-                    .into_iter()
-                    .map(|opt| CreateSelectMenuOption::new(opt.0, opt.1))
-                    .collect(),
-            },
-        ))
+impl Into<ActionRow> for StringSelectMenu {
+    fn into(self) -> ActionRow {
+        ActionRow::StringSelectMenu(self)
     }
 }
